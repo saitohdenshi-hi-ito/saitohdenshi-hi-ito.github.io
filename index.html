@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>社内開発チェックリスト</title>
   <script type="text/javascript"
-    src="https://ff.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=Xu3TuVJ3emqPKP-GR1_HXanpxR1XP7ryyTsOWsjXPwc66ZnAOW-mESkRUu-jijKHqyaDR62uPrttgAk9tfCrvpTb-e4T0duE78qfpqcvH-S2hh8XzS89OtgEv_ejRY_JGui4FdrSLD7iyETEJtSffH-bVcDJUDvDZlqUvh38dWZK9KEhaoGkjKssgaHVlUexsx9Y-TtlmbPRlMAMXZA5LB7kdqRM_HalRFXPm6fGuen3UMy0twtDDrUXW6eiXxZexv5oAyBtwxvgTXEsWwKzTQ"
+    src="https://ff.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=_SoatyCQFBwkJKYJT8NGxEjsq4CtnQJEeUMKaz2vJid6y5JTTAIJGGrdORNSc1SRg_xM7l9Pio2AD8UyLCVR0xlBA0ZePygyE4vY4R3jC2atCTDEM2uaWBf2ZdK7SQW0MR_H2DSnWeToOzzYbgLJaFcbiWDYvVEV0IVUDNn0QSMvC2KLHaBYe9u12fot1qYgK-ycL0MeNCOYKiLUAEOOXodqfo1d21u5Brle86cNpgi91v2JqaoS79cgEajYDiM-VEc-GobhIwcBZdQ9ZriY6A"
     charset="UTF-8"></script>
   <style>
     :root {
@@ -327,6 +327,11 @@
     <div id="checklist"></div>
   </div>
 
+  <iframe name="gasSubmitFrame" id="gasSubmitFrame" style="display:none;"></iframe>
+  <form id="gasSubmitForm" method="POST" target="gasSubmitFrame" style="display:none;">
+    <input type="hidden" name="payload" id="payloadField">
+  </form>
+
   <script>
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxCOamZB4BeAvabgRGvbnNCK6ZgkdNYbm_R56kHdZKSOpVDFI9-eQ7O5BwT26Y-GLDv/exec";
 
@@ -396,6 +401,9 @@
     const saveButton = document.getElementById("saveButton");
     const requestTitleEl = document.getElementById("requestTitle");
     const authorNameEl = document.getElementById("authorName");
+    const gasSubmitForm = document.getElementById("gasSubmitForm");
+    const payloadField = document.getElementById("payloadField");
+    const gasSubmitFrame = document.getElementById("gasSubmitFrame");
 
     const allQuestions = [];
     let maxScore = 0;
@@ -568,7 +576,17 @@
       updateScore();
     });
 
-    saveButton.addEventListener("click", async () => {
+    let submitInProgress = false;
+
+    gasSubmitFrame.addEventListener("load", () => {
+      if (!submitInProgress) return;
+      submitInProgress = false;
+      saveButton.disabled = false;
+      setStatus("送信しました。数秒後に Google Sheets を確認してください。");
+      alert("送信しました。Google Sheets に行が追加されているか確認してください。");
+    });
+
+    saveButton.addEventListener("click", () => {
       clearStatus();
 
       if (!validateBeforeSave()) return;
@@ -579,31 +597,13 @@
       }
 
       const payload = buildPayload();
+      gasSubmitForm.action = GAS_WEB_APP_URL;
+      payloadField.value = JSON.stringify(payload);
+
       saveButton.disabled = true;
-      setStatus("保存中です...");
-
-      try {
-        const response = await fetch(GAS_WEB_APP_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || !data.ok) {
-          throw new Error(data.message || "保存に失敗しました。");
-        }
-
-        setStatus(`保存しました。行番号: ${data.rowNumber}`);
-        alert("Google Sheets への保存が完了しました。");
-      } catch (error) {
-        console.error(error);
-        setStatus(`保存エラー: ${error.message}`);
-        alert(`保存に失敗しました。${error.message}`);
-      } finally {
-        saveButton.disabled = false;
-      }
+      submitInProgress = true;
+      setStatus("送信中です...");
+      gasSubmitForm.submit();
     });
 
     updateScore();
