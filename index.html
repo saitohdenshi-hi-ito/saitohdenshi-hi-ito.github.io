@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>社内開発チェックリスト</title>
+  <script type="text/javascript"
+    src="https://ff.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=Xu3TuVJ3emqPKP-GR1_HXanpxR1XP7ryyTsOWsjXPwc66ZnAOW-mESkRUu-jijKHqyaDR62uPrttgAk9tfCrvpTb-e4T0duE78qfpqcvH-S2hh8XzS89OtgEv_ejRY_JGui4FdrSLD7iyETEJtSffH-bVcDJUDvDZlqUvh38dWZK9KEhaoGkjKssgaHVlUexsx9Y-TtlmbPRlMAMXZA5LB7kdqRM_HalRFXPm6fGuen3UMy0twtDDrUXW6eiXxZexv5oAyBtwxvgTXEsWwKzTQ"
+    charset="UTF-8"></script>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --line: #d9e0ea;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --ok: #166534;
+      --warn: #92400e;
+      --ng: #991b1b;
+      --pending: #374151;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.5;
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 16px 80px;
+    }
+
+    .sticky-summary {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(246, 248, 251, 0.95);
+      backdrop-filter: blur(8px);
+      padding-bottom: 12px;
+    }
+
+    .summary-card,
+    .info-card,
+    .section {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+    }
+
+    .summary-card {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .metric {
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fbfdff;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .metric .value {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .judge-ok {
+      color: var(--ok);
+    }
+
+    .judge-warn {
+      color: var(--warn);
+    }
+
+    .judge-ng {
+      color: var(--ng);
+    }
+
+    .judge-pending {
+      color: var(--pending);
+    }
+
+    .force-note,
+    .status-note {
+      grid-column: 1 / -1;
+      margin-top: -4px;
+      font-size: 14px;
+      font-weight: 600;
+      display: none;
+    }
+
+    .force-note {
+      color: var(--ng);
+    }
+
+    .status-note {
+      color: var(--accent);
+    }
+
+    .info-card {
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-size: 15px;
+      background: #fff;
+    }
+
+    .field input.error {
+      border-color: var(--ng);
+      background: #fff7f7;
+    }
+
+    .section {
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .section h2 {
+      margin: 0 0 14px;
+      font-size: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 12px;
+      vertical-align: top;
+      text-align: left;
+      background: white;
+    }
+
+    th {
+      background: #f8fafc;
+      font-size: 14px;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .choices {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .choice-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      white-space: nowrap;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      appearance: none;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: wait;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .help {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 800px) {
+
+      .summary-card,
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      table,
+      thead,
+      tbody,
+      th,
+      td,
+      tr {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        border-bottom: 1px solid var(--line);
+      }
+
+      td {
+        border-bottom: none;
+        padding: 10px 12px;
+      }
+
+      td::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="sticky-summary">
+      <div class="summary-card">
+        <div class="metric">
+          <div class="label">回答数</div>
+          <div class="value"><span id="answeredCount">0</span> / <span id="maxScore">0</span></div>
+        </div>
+        <div class="metric">
+          <div class="label">スコア</div>
+          <div class="value"><span id="score">0</span> / <span id="maxScoreCopy">0</span></div>
+        </div>
+        <div class="metric">
+          <div class="label">達成率</div>
+          <div class="value"><span id="ratio">0</span>%</div>
+        </div>
+        <div class="metric">
+          <div class="label">判定</div>
+          <div class="value judge-pending" id="result">未判定</div>
+        </div>
+        <div class="force-note" id="forceNote">0-5 が「いいえ」のため、スコアに関係なく判定は NG（見送り）です。</div>
+        <div class="status-note" id="statusNote"></div>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <h1 style="margin:0 0 14px; font-size: 26px;">社内開発チェックリスト</h1>
+      <div class="info-grid">
+        <div class="field">
+          <label for="requestTitle">案件名</label>
+          <input id="requestTitle" type="text" placeholder="例：在庫管理システム改修" />
+        </div>
+        <div class="field">
+          <label for="authorName">記入者</label>
+          <input id="authorName" type="text" placeholder="例：山田 太郎" />
+        </div>
+      </div>
+      <div class="actions">
+        <button class="secondary" id="resetButton" type="button">回答をリセット</button>
+        <button class="primary" id="saveButton" type="button">Google Sheets に保存</button>
+      </div>
+      <div class="help">`GAS_WEB_APP_URL` を、Google Apps Script をウェブアプリとしてデプロイした URL に置き換えてください。</div>
+    </div>
+
+    <div id="checklist"></div>
+  </div>
+
+  <script>
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxCOamZB4BeAvabgRGvbnNCK6ZgkdNYbm_R56kHdZKSOpVDFI9-eQ7O5BwT26Y-GLDv/exec";
+
+    const sections = [
+      {
+        title: "0. 開発の前に（業務そのものの見直し）",
+        items: [
+          ["0-1", "現行業務をやめる・減らすという選択肢を検討したか", ["はい", "いいえ"]],
+          ["0-2", "運用変更やルール変更で解決できないか検討したか", ["はい", "いいえ"]],
+          ["0-3", "既存ツール・既存機能で代替できないか検討したか", ["はい", "いいえ"]],
+          ["0-4", "手作業のままでも許容できない理由が明確か", ["はい", "いいえ"]],
+          ["0-5", "上記をすべて検討した上で、システム開発が必要と判断できるか", ["はい", "いいえ"]]
+        ]
+      },
+      {
+        title: "1. 課題の明確さ",
+        items: [
+          ["1-1", "現状の業務課題が存在するか", ["はい", "いいえ"]],
+          ["1-2", "現状の課題が具体的に説明されているか", ["はい", "いいえ"]],
+          ["1-3", "課題の工程が特定されているか", ["はい", "いいえ"]]
+        ]
+      },
+      {
+        title: "2. 利用者・利用範囲",
+        items: [
+          ["2-1", "誰が使うのかが明確であるか", ["はい", "いいえ"]],
+          ["2-2", "利用場面・頻度が想定されているか", ["はい", "いいえ"]],
+          ["2-3", "利用者の人数・範囲は十分であるか", ["はい", "いいえ"]]
+        ]
+      },
+      {
+        title: "3. 期待効果",
+        items: [
+          ["3-1", "期待する効果が具体的に示されているか", ["はい", "いいえ"]],
+          ["3-2", "効果が開発コストに見合うか", ["はい", "いいえ"]],
+          ["3-3", "効果を確認する手段があるか", ["はい", "いいえ"]]
+        ]
+      },
+      {
+        title: "4. 実現性・リスク",
+        items: [
+          ["4-1", "技術的に実現可能であるか", ["はい", "いいえ"]],
+          ["4-2", "現在の開発リソースで対応可能か", ["はい", "いいえ"]],
+          ["4-3", "既存システムへの影響は許容範囲か", ["はい", "いいえ"]],
+          ["4-4", "仕様が十分に固まっているか", ["はい", "いいえ"]]
+        ]
+      },
+      {
+        title: "5. 優先度",
+        items: [
+          ["5-1", "他の開発案件と比較して優先すべき理由があるか", ["はい", "いいえ"]],
+          ["5-2", "時期的な制約があるか", ["はい", "いいえ"]]
+        ]
+      }
+    ];
+
+    const container = document.getElementById("checklist");
+    const scoreEl = document.getElementById("score");
+    const maxScoreEl = document.getElementById("maxScore");
+    const maxScoreCopyEl = document.getElementById("maxScoreCopy");
+    const answeredCountEl = document.getElementById("answeredCount");
+    const ratioEl = document.getElementById("ratio");
+    const resultEl = document.getElementById("result");
+    const forceNoteEl = document.getElementById("forceNote");
+    const statusNoteEl = document.getElementById("statusNote");
+    const resetButton = document.getElementById("resetButton");
+    const saveButton = document.getElementById("saveButton");
+    const requestTitleEl = document.getElementById("requestTitle");
+    const authorNameEl = document.getElementById("authorName");
+
+    const allQuestions = [];
+    let maxScore = 0;
+
+    sections.forEach((section) => {
+      const secDiv = document.createElement("section");
+      secDiv.className = "section";
+
+      const title = document.createElement("h2");
+      title.textContent = section.title;
+      secDiv.appendChild(title);
+
+      const table = document.createElement("table");
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th style="width: 90px;">#</th>
+            <th>チェック観点</th>
+            <th style="width: 340px;">回答</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+
+      const tbody = table.querySelector("tbody");
+
+      section.items.forEach(([id, text, options]) => {
+        allQuestions.push({ id, text, section: section.title });
+        const row = document.createElement("tr");
+        const choices = options.map((opt, optIndex) => {
+          const inputId = `q_${id}_${optIndex}`;
+          return `
+            <label class="choice-group" for="${inputId}">
+              <input type="radio" name="q_${id}" id="${inputId}" value="${opt}" data-question-id="${id}" data-question-text="${text}">
+              <span>${opt}</span>
+            </label>
+          `;
+        }).join("");
+
+        row.innerHTML = `
+          <td data-label="#">${id}</td>
+          <td data-label="チェック観点">${text}</td>
+          <td data-label="回答"><div class="choices">${choices}</div></td>
+        `;
+
+        tbody.appendChild(row);
+        maxScore += 1;
+      });
+
+      secDiv.appendChild(table);
+      container.appendChild(secDiv);
+    });
+
+    maxScoreEl.textContent = String(maxScore);
+    maxScoreCopyEl.textContent = String(maxScore);
+
+    function getAnswer(questionId) {
+      const checked = document.querySelector(`input[name="q_${questionId}"]:checked`);
+      return checked ? checked.value : "";
+    }
+
+    function getCheckedInputs() {
+      return Array.from(document.querySelectorAll('input[type="radio"]:checked'));
+    }
+
+    function clearStatus() {
+      statusNoteEl.style.display = "none";
+      statusNoteEl.textContent = "";
+    }
+
+    function setStatus(message) {
+      statusNoteEl.textContent = message;
+      statusNoteEl.style.display = "block";
+    }
+
+    function updateScore() {
+      const checkedInputs = getCheckedInputs();
+      let score = 0;
+
+      checkedInputs.forEach((input) => {
+        if (input.value === "はい") score += 1;
+      });
+
+      const answeredCount = checkedInputs.length;
+      const ratio = maxScore === 0 ? 0 : Math.round((score / maxScore) * 100);
+      const forceNg = getAnswer("0-5") === "いいえ";
+      const isComplete = answeredCount === maxScore;
+
+      let resultText = "未判定";
+      let resultClass = "judge-pending";
+
+      if (isComplete) {
+        resultText = "見送り";
+        resultClass = "judge-ng";
+
+        if (!forceNg) {
+          if (ratio >= 75) {
+            resultText = "開発を進める";
+            resultClass = "judge-ok";
+          } else if (ratio >= 50) {
+            resultText = "要再検討";
+            resultClass = "judge-warn";
+          }
+        }
+      }
+
+      answeredCountEl.textContent = String(answeredCount);
+      scoreEl.textContent = String(score);
+      ratioEl.textContent = String(ratio);
+      resultEl.textContent = resultText;
+      resultEl.className = `value ${resultClass}`;
+      forceNoteEl.style.display = forceNg && isComplete ? "block" : "none";
+    }
+
+    function validateBeforeSave() {
+      let valid = true;
+      [requestTitleEl, authorNameEl].forEach((el) => el.classList.remove("error"));
+
+      if (!requestTitleEl.value.trim()) {
+        requestTitleEl.classList.add("error");
+        valid = false;
+      }
+      if (!authorNameEl.value.trim()) {
+        authorNameEl.classList.add("error");
+        valid = false;
+      }
+      if (getCheckedInputs().length !== maxScore) {
+        valid = false;
+      }
+
+      if (!valid) {
+        alert("案件名・記入者・全設問の回答を入力してから保存してください。");
+      }
+      return valid;
+    }
+
+    function buildPayload() {
+      const answers = allQuestions.map((q) => ({
+        questionId: q.id,
+        section: q.section,
+        questionText: q.text,
+        answer: getAnswer(q.id)
+      }));
+
+      return {
+        submittedAt: new Date().toISOString(),
+        requestTitle: requestTitleEl.value.trim(),
+        authorName: authorNameEl.value.trim(),
+        score: Number(scoreEl.textContent),
+        maxScore: Number(maxScoreEl.textContent),
+        ratio: Number(ratioEl.textContent),
+        result: resultEl.textContent,
+        forceNg: getAnswer("0-5") === "いいえ",
+        answers
+      };
+    }
+
+    document.addEventListener("change", () => {
+      clearStatus();
+      updateScore();
+    });
+
+    resetButton.addEventListener("click", () => {
+      document.querySelectorAll('input[type="radio"]').forEach((input) => { input.checked = false; });
+      requestTitleEl.value = "";
+      authorNameEl.value = "";
+      requestTitleEl.classList.remove("error");
+      authorNameEl.classList.remove("error");
+      clearStatus();
+      updateScore();
+    });
+
+    saveButton.addEventListener("click", async () => {
+      clearStatus();
+
+      if (!validateBeforeSave()) return;
+
+      if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes("REPLACE_WITH")) {
+        alert("GAS_WEB_APP_URL を Apps Script の Web アプリ URL に置き換えてください。");
+        return;
+      }
+
+      const payload = buildPayload();
+      saveButton.disabled = true;
+      setStatus("保存中です...");
+
+      try {
+        const response = await fetch(GAS_WEB_APP_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+          throw new Error(data.message || "保存に失敗しました。");
+        }
+
+        setStatus(`保存しました。行番号: ${data.rowNumber}`);
+        alert("Google Sheets への保存が完了しました。");
+      } catch (error) {
+        console.error(error);
+        setStatus(`保存エラー: ${error.message}`);
+        alert(`保存に失敗しました。${error.message}`);
+      } finally {
+        saveButton.disabled = false;
+      }
+    });
+
+    updateScore();
+  </script>
+</body>
+
+</html>
